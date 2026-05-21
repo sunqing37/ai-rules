@@ -1,0 +1,32 @@
+# Kotlin 项目 .gitignore — 复制到项目根目录并重命名为 .gitignore
+
+# Gradle
+.gradle/
+.gradletasknamecache
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Build output
+out/
+target/
+
+# Kotlin
+*.kotlin_module
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+pom.xml.versionsBackup
+
+# Environment
+.env
+.env.local
+*.local.properties

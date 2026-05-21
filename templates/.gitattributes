@@ -1,0 +1,92 @@
+# .gitattributes — 复制到项目根目录并重命名为 .gitattributes
+# 详见 .ai-rules/rules/line-endings.md
+
+# 默认行为：自动检测文本文件，提交时统一为 LF
+* text=auto
+
+# 源代码文件 — 强制 LF
+*.kt          text eol=lf
+*.kts         text eol=lf
+*.java        text eol=lf
+*.scala       text eol=lf
+*.groovy      text eol=lf
+*.xml         text eol=lf
+*.gradle      text eol=lf
+*.properties  text eol=lf
+*.py          text eol=lf
+*.rb          text eol=lf
+*.go          text eol=lf
+*.rs          text eol=lf
+*.c           text eol=lf
+*.h           text eol=lf
+*.cpp         text eol=lf
+*.hpp         text eol=lf
+*.swift       text eol=lf
+*.ts          text eol=lf
+*.tsx         text eol=lf
+*.js          text eol=lf
+*.jsx         text eol=lf
+*.css         text eol=lf
+*.scss        text eol=lf
+*.less        text eol=lf
+*.html        text eol=lf
+*.vue         text eol=lf
+*.svelte      text eol=lf
+
+# 配置与文档 — 强制 LF
+*.md          text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+*.json        text eol=lf
+*.toml        text eol=lf
+*.ini         text eol=lf
+*.cfg         text eol=lf
+*.conf        text eol=lf
+*.proto       text eol=lf
+*.graphql     text eol=lf
+*.sql         text eol=lf
+
+# Shell 脚本 — 强制 LF（CRLF 脚本在 Linux 上无法执行）
+*.sh          text eol=lf
+*.bash        text eol=lf
+*.zsh         text eol=lf
+
+# Windows 脚本 — 需要 CRLF 才能正常执行
+*.bat         text eol=crlf
+*.cmd         text eol=crlf
+*.ps1         text eol=crlf
+
+# 二进制文件 — 不进行换行符转换
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.ico         binary
+*.svg         binary
+*.webp        binary
+*.mp3         binary
+*.mp4         binary
+*.wav         binary
+*.pdf         binary
+*.jar         binary
+*.aar         binary
+*.apk         binary
+*.aab         binary
+*.zip         binary
+*.gz          binary
+*.tar         binary
+*.ttf         binary
+*.otf         binary
+*.eot         binary
+*.woff        binary
+*.woff2       binary
+*.keystore    binary
+*.jks         binary
+*.p12         binary
+*.db          binary
+*.sqlite      binary
+*.so          binary
+*.dylib       binary
+*.dll         binary
+*.exe         binary
+*.bin         binary
