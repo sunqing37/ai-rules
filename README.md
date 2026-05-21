@@ -8,7 +8,7 @@
 
 ```bash
 # 在目标项目中添加 submodule
-git submodule add https://github.com/your-org/ai-rules.git .ai-rules
+git submodule add https://github.com/sunqing37/ai-rules.git .ai-rules
 git submodule update --init --recursive
 ```
 
