@@ -1,0 +1,13 @@
+# .gitattributes — 详见 rules/line-endings.md
+
+* text=auto
+
+# Markdown / config — 强制 LF
+*.md          text eol=lf
+*.yml         text eol=lf
+*.toml        text eol=lf
+*.json        text eol=lf
+
+# Windows 脚本 — CRLF
+*.bat         text eol=crlf
+*.cmd         text eol=crlf
