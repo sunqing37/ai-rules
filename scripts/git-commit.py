@@ -11,7 +11,7 @@ commit object，不经过 `git commit` 这类 porcelain 命令。AI 工具的 re
     scripts/git-commit.py -F <file>
     echo "<message>" | scripts/git-commit.py
 
-脚本在构造 commit 前自动执行 body 洁净度检查，拒绝包含 AI 注入特征的提交信息。
+脚本在构造 commit 前自动执行 message 洁净度检查，拒绝包含 AI 注入特征的提交信息。
 """
 
 import argparse
@@ -30,8 +30,14 @@ EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf899d9cf5edcae06"
 # ---------------------------------------------------------------------------
 _BLOCKED_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("Co-authored-by", re.compile(r"^Co-authored-by\s*:", re.IGNORECASE)),
-    ("Signed-off-by (unauthorized)", re.compile(r"^Signed-off-by\s*:")),
+    ("Generated-by", re.compile(r"^Generated-by\s*:", re.IGNORECASE)),
+    ("AI-generated-by", re.compile(r"^AI-generated-by\s*:", re.IGNORECASE)),
 ]
+
+_SIGNED_OFF_BY_PATTERN = re.compile(r"^Signed-off-by\s*:", re.IGNORECASE)
+_CONVENTIONAL_SUBJECT = re.compile(
+    r"^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\([^)]+\))?!?: .+"
+)
 
 
 def run_git(args: list[str], check: bool = True) -> str:
@@ -45,33 +51,47 @@ def run_git(args: list[str], check: bool = True) -> str:
     return result.stdout.strip()
 
 
-def validate_body(message: str) -> None:
+def validate_message(message: str, allow_signed_off_by: bool = False) -> None:
     """检查提交信息是否干净，拒绝包含 AI 注入特征的 message。"""
-    for line_no, line in enumerate(message.split("\n"), start=1):
-        line = line.strip()
-        if not line:
-            continue
-        for name, pattern in _BLOCKED_PATTERNS:
-            if pattern.search(line):
-                print(
-                    f"[--check] 第 {line_no} 行命中禁止模式 {name!r}: {line}",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+    subject = message.split("\n", 1)[0].strip()
+    if len(subject) > 72:
+        print(
+            f"[--check] 提交标题超过 72 字符: {len(subject)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
-    # 额外检查：body 不应包含连续两个空行（git 标准）
-    blank_count = 0
-    for line in message.split("\n"):
-        if line.strip() == "":
-            blank_count += 1
-            if blank_count > 1:
+    if not _CONVENTIONAL_SUBJECT.match(subject):
+        print(
+            "[--check] 提交标题不符合 Conventional Commits 格式: "
+            "<type>(<scope>): <subject>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    for line_no, line in enumerate(message.split("\n"), start=1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if _SIGNED_OFF_BY_PATTERN.search(stripped) and not allow_signed_off_by:
+            print(
+                f"[--check] 第 {line_no} 行命中禁止模式 'Signed-off-by': {stripped}",
+                file=sys.stderr,
+            )
+            print(
+                "[--check] 如项目启用了 DCO，可显式添加 --allow-signed-off-by",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        for name, pattern in _BLOCKED_PATTERNS:
+            if pattern.search(stripped):
                 print(
-                    "[--check] 提交信息包含连续空行，不符合 Conventional Commits 格式",
+                    f"[--check] 第 {line_no} 行命中禁止模式 {name!r}: {stripped}",
                     file=sys.stderr,
                 )
                 sys.exit(1)
-        else:
-            blank_count = 0
 
 
 def parse_args() -> argparse.Namespace:
@@ -95,6 +115,11 @@ def parse_args() -> argparse.Namespace:
         help="允许空提交（无暂存变更时也创建 commit）",
     )
     parser.add_argument(
+        "--allow-signed-off-by",
+        action="store_true",
+        help="允许 Signed-off-by trailer，用于启用 DCO 的项目",
+    )
+    parser.add_argument(
         "--skip-upstream-check",
         action="store_true",
         help="跳过远端同步检查（仅在确认无冲突时使用）",
@@ -113,16 +138,18 @@ def check_upstream(branch: str, skip: bool = False) -> None:
         print("[upstream] 已跳过远端同步检查", file=sys.stderr)
         return
 
-    # 是否有上游跟踪分支
     try:
         upstream = run_git(["rev-parse", "--abbrev-ref", f"{branch}@{{u}}"])
+        remote = run_git(["config", f"branch.{branch}.remote"])
+        merge_ref = run_git(["config", f"branch.{branch}.merge"])
     except subprocess.CalledProcessError:
         # 无上游配置，本地分支，允许提交
         return
 
     print(f"[upstream] 正在 fetch {upstream} ...", file=sys.stderr)
     try:
-        run_git(["fetch", upstream.split("/", 1)[0], branch])
+        # 使用 branch.<name>.merge，避免 feature/x 这类分支被错误 fetch。
+        run_git(["fetch", remote, merge_ref])
     except subprocess.CalledProcessError as exc:
         print(
             f"[upstream] fetch 失败: {exc.stderr.strip() if exc.stderr else exc}",
@@ -132,9 +159,8 @@ def check_upstream(branch: str, skip: bool = False) -> None:
         print("[upstream] 暂存区变更未被修改，可稍后重试", file=sys.stderr)
         sys.exit(1)
 
-    # 统计落后提交数
     try:
-        behind = run_git(["rev-list", "--count", f"HEAD..{branch}@{{u}}"])
+        behind = run_git(["rev-list", "--count", f"HEAD..{upstream}"])
     except subprocess.CalledProcessError:
         return
 
@@ -152,7 +178,6 @@ def get_message(args: argparse.Namespace) -> str:
         return args.message
     if args.file:
         return Path(args.file).read_text(encoding="utf-8").strip()
-    # stdin
     if sys.stdin.isatty():
         print("Error: 请通过 -m、-F 或管道提供提交信息", file=sys.stderr)
         sys.exit(1)
@@ -167,11 +192,8 @@ def main() -> None:
         print("Error: 提交信息不能为空", file=sys.stderr)
         sys.exit(1)
 
-    # ---- 前置检查：body 洁净度 ----
-    validate_body(message)
+    validate_message(message, allow_signed_off_by=args.allow_signed_off_by)
 
-    # ---- 1. 写 tree ----
-    # locale 无关预检：git diff --cached --quiet 替代 stderr 字符串匹配
     has_staged = subprocess.run(
         ["git", "diff", "--cached", "--quiet"]
     ).returncode != 0
@@ -181,7 +203,6 @@ def main() -> None:
             try:
                 tree = run_git(["rev-parse", "HEAD^{tree}"])
             except subprocess.CalledProcessError:
-                # 仓库尚无提交记录，使用 git 空 tree 魔数
                 tree = EMPTY_TREE_HASH
         else:
             print(
@@ -192,13 +213,11 @@ def main() -> None:
     else:
         tree = run_git(["write-tree"])
 
-    # ---- 2. 获取父提交 ----
     try:
         parent = run_git(["rev-parse", "HEAD"])
     except subprocess.CalledProcessError:
-        parent = None  # 初始提交
+        parent = None
 
-    # ---- 3. 获取当前分支名 ----
     try:
         branch = run_git(["rev-parse", "--abbrev-ref", "HEAD"])
         if branch == "HEAD":
@@ -208,18 +227,14 @@ def main() -> None:
         print("Error: 无法获取当前分支名", file=sys.stderr)
         sys.exit(1)
 
-    # ---- 4. 远端同步检查 ----
     check_upstream(branch, skip=args.skip_upstream_check)
 
-    # ---- 5. 构造 commit object ----
     cmd = ["commit-tree", tree]
     if parent:
         cmd.extend(["-p", parent])
     cmd.extend(["-m", message])
 
     commit_hash = run_git(cmd)
-
-    # ---- 6. 更新分支引用 ----
     run_git(["update-ref", f"refs/heads/{branch}", commit_hash])
 
     print(f"[OK] {commit_hash[:7]} → refs/heads/{branch}")
