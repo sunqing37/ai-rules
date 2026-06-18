@@ -1,0 +1,61 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check line endings
+        run: |
+          if git grep -Il $'\r' -- ':!*.bat' ':!*.cmd' ':!*.ps1'; then
+            echo "CRLF detected in files that should use LF"
+            exit 1
+          fi
+
+      - name: Check required files
+        run: |
+          test -f README.md
+          test -f CHANGELOG.md
+          test -f CONTRIBUTING.md
+          test -f LICENSE
+          test -f templates/.editorconfig
+          test -f templates/.gitattributes
+          test -f scripts/git-commit.py
+
+      - name: Check skill frontmatter
+        run: |
+          for file in skills/*/SKILL.md; do
+            head -n 1 "$file" | grep -qx -- "---"
+            grep -q "^name:" "$file"
+            grep -q "^description:" "$file"
+          done
+
+      - name: Check README referenced paths
+        run: |
+          for path in \
+            rules/general.md \
+            rules/git-conventions.md \
+            rules/code-review.md \
+            rules/documentation.md \
+            rules/line-endings.md \
+            skills/general-coding/SKILL.md \
+            skills/code-review/SKILL.md \
+            skills/git-workflow/SKILL.md \
+            skills/android-mad/SKILL.md \
+            skills/android-feature-workflow/SKILL.md \
+            skills/backend-kotlin/SKILL.md \
+            adapters/codex/AGENTS.md \
+            adapters/claude/CLAUDE.md \
+            adapters/cursor/ai-rules.mdc \
+            adapters/deepseek/instructions.md; do
+            test -e "$path" || { echo "Missing referenced path: $path"; exit 1; }
+          done
