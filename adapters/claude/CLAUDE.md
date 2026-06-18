@@ -4,17 +4,17 @@ This project uses shared AI coding rules from `.ai-rules/`.
 
 ## Required Reading
 
-Before making code changes, read these rules:
+Before making code changes, read context in this order:
 
-- `.ai-rules/rules/general.md`
-- `.ai-rules/rules/git-conventions.md`
-- `.ai-rules/rules/code-review.md`
-- `.ai-rules/rules/documentation.md`
-- `.ai-rules/rules/line-endings.md`
+1. Project index: `PROJECT_INDEX.md` or `.ai/PROJECT_INDEX.md` if present.
+2. Task-relevant rules from `.ai-rules/rules/`.
+3. The most relevant Skill from `.ai-rules/skills/`.
+
+If the project index is missing, stale, or conflicts with source code, mention the risk and fall back to the minimal source inspection needed for the task.
 
 ## Task Skills
 
-Load the most relevant Skill before working:
+Load only the Skill relevant to the current task:
 
 - General coding: `.ai-rules/skills/general-coding/SKILL.md`
 - Code review: `.ai-rules/skills/code-review/SKILL.md`

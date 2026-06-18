@@ -2,15 +2,15 @@
 
 This project uses shared AI coding rules from `.ai-rules/`.
 
-Before coding, read:
+Before coding, read context in this order:
 
-- `.ai-rules/rules/general.md`
-- `.ai-rules/rules/git-conventions.md`
-- `.ai-rules/rules/code-review.md`
-- `.ai-rules/rules/documentation.md`
-- `.ai-rules/rules/line-endings.md`
+1. Project index: `PROJECT_INDEX.md` or `.ai/PROJECT_INDEX.md` if present.
+2. Task-relevant rules from `.ai-rules/rules/`.
+3. Task-specific skills from `.ai-rules/skills/` when relevant.
 
-Use task-specific skills from `.ai-rules/skills/` when relevant:
+If the project index is missing, stale, or conflicts with source code, mention the risk and fall back to the minimal source inspection needed for the task.
+
+Task-specific skills:
 
 - Android tasks: `.ai-rules/skills/android-mad/SKILL.md`
 - Android feature work: `.ai-rules/skills/android-feature-workflow/SKILL.md`
