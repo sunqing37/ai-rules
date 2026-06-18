@@ -7,7 +7,7 @@
 - 多个项目希望复用同一套 AI 编码规范
 - Cursor、Claude Code、DeepSeek TUI、Codex 等工具需要共享项目指令
 - Android、Kotlin 后端、Git 工作流、代码审查等场景需要可复用的 Skill
-- 新项目初始化时需要快速复制 `.editorconfig`、`.gitattributes` 等基础模板
+- 新项目初始化时需要快速复制 `.editorconfig`、`.gitattributes`、`PROJECT_INDEX.md` 等基础模板
 
 ## 快速开始
 
@@ -21,7 +21,7 @@ git submodule update --init --recursive
 
 ### 2. 在项目 Instructions 中显式引用
 
-AI 工具不会天然保证递归加载 `.ai-rules/` 下的全部文件。建议在目标项目的项目级指令文件中显式声明需要读取的规则文件。
+AI 工具不会天然保证递归加载 `.ai-rules/` 下的全部文件。建议在目标项目的项目级指令文件中显式声明项目索引和需要读取的规则文件。
 
 不同工具的常见指令文件位置：
 
@@ -39,14 +39,12 @@ AI 工具不会天然保证递归加载 `.ai-rules/` 下的全部文件。建议
 
 本项目遵循统一 AI 编码规范，规则位于 `.ai-rules/`。
 
-在编写代码前，请先阅读：
-- .ai-rules/rules/general.md         — 通用编码原则
-- .ai-rules/rules/git-conventions.md  — Git 提交和分支规范
-- .ai-rules/rules/code-review.md      — 代码审查规范
-- .ai-rules/rules/documentation.md    — 文档规范
-- .ai-rules/rules/line-endings.md     — 换行符管理规范
+在编写代码前，请按顺序读取：
+1. `PROJECT_INDEX.md` 或 `.ai/PROJECT_INDEX.md` — 项目当前结构、模块职责和 AI 工作入口
+2. `.ai-rules/rules/` 下与任务相关的规则文件
+3. `.ai-rules/skills/` 下与任务类型相关的 Skill 定义
 
-根据任务类型，按需读取 `.ai-rules/skills/` 下对应的 Skill 定义。
+如果项目索引缺失、明显过期或与源码冲突，请说明风险，并回退到必要的源码检查。
 ```
 
 ### 3. 使用适配模板
@@ -66,6 +64,7 @@ adapters/
 ```bash
 cp .ai-rules/templates/.editorconfig .editorconfig
 cp .ai-rules/templates/.gitattributes .gitattributes
+cp .ai-rules/templates/PROJECT_INDEX.md PROJECT_INDEX.md
 ```
 
 如需使用 AI 安全提交脚本：
@@ -103,6 +102,7 @@ ai-rules/
 ├── templates/                      # 项目模板文件
 │   ├── .editorconfig
 │   ├── .gitattributes
+│   ├── PROJECT_INDEX.md            # 面向 AI 的项目目录索引模板
 │   └── gitignore-templates/
 └── scripts/                        # 辅助脚本
     └── git-commit.py               # AI 安全提交脚本
@@ -123,6 +123,7 @@ ai-rules/
 ## 维护约定
 
 - 修改规范后，在 `CHANGELOG.md` 中记录变更
+- 项目顶层目录、核心模块、入口文件、构建/测试命令或架构约束变化时，同步更新 `PROJECT_INDEX.md`
 - 遵循 [Semantic Versioning](https://semver.org/) 进行版本管理
 - 发布稳定版本时创建 `vMAJOR.MINOR.PATCH` tag
 - 各项目通过 submodule 版本锁定引用特定版本的规范
