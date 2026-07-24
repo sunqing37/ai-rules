@@ -29,7 +29,15 @@ jobs:
           test -f LICENSE
           test -f templates/.editorconfig
           test -f templates/.gitattributes
+          test -f scripts/init.py
           test -f scripts/git-commit.py
+
+      - name: Check initialization script
+        run: |
+          temp_dir="$(mktemp -d)"
+          python scripts/init.py --target "$temp_dir"
+          test -f "$temp_dir/AGENTS.md"
+          grep -q 'shared AI coding rules from `.ai-rules/`' "$temp_dir/AGENTS.md"
 
       - name: Check skill frontmatter
         run: |

@@ -47,9 +47,17 @@ AI 工具不会天然保证递归加载 `.ai-rules/` 下的全部文件。建议
 如果项目索引缺失、明显过期或与源码冲突，请说明风险，并回退到必要的源码检查。
 ```
 
-### 3. 使用适配模板
+### 3. 初始化项目指令
 
-仓库提供了常见 AI 工具的适配模板，可复制到目标项目：
+在目标项目根目录执行初始化脚本，只添加一个 `AGENTS.md`。该文件通过 `.ai-rules/` 路径引导 AI 读取本仓库中的规则、Skill 和项目索引：
+
+```bash
+python .ai-rules/scripts/init.py
+```
+
+已有的 `AGENTS.md` 不会被覆盖；确认需要替换时显式传入 `--force`。可使用 `--target /path/to/project` 指定其他目标项目目录。
+
+`AGENTS.md` 内容使用 Codex 适配模板；其他工具的适配模板仍可按需手动参考：
 
 ```text
 adapters/
@@ -59,7 +67,7 @@ adapters/
 └── deepseek/instructions.md
 ```
 
-### 4. 复制项目模板
+### 4. 手动复制项目模板
 
 ```bash
 cp .ai-rules/templates/.editorconfig .editorconfig
@@ -105,6 +113,7 @@ ai-rules/
 │   ├── PROJECT_INDEX.md            # 面向 AI 的项目目录索引模板
 │   └── gitignore-templates/
 └── scripts/                        # 辅助脚本
+    ├── init.py                     # 项目接入初始化脚本
     └── git-commit.py               # AI 安全提交脚本
 ```
 
