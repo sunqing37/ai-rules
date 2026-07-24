@@ -6,6 +6,7 @@
 
 ### Added
 
+- 新增 `scripts/init.py`，可在引用本仓库的项目中添加指向 `.ai-rules/` 的 `AGENTS.md`。
 - 新增 `PROJECT_INDEX.md` 模板，作为面向 AI 的项目目录索引。
 - 新增 AI 项目索引规范，明确索引结构、维护时机以及与 CHANGELOG 的边界。
 - 新增常见 AI 工具适配模板：Codex、Claude Code、Cursor、DeepSeek TUI。
